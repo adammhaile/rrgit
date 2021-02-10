@@ -1,4 +1,4 @@
-import logging
+from .. log import *
 from .. util import rrgit_error
 from duetwebapi import DuetWebAPI as DWA
 
@@ -33,6 +33,6 @@ class Command():
             for d in dirs:
                 self.directories.append(dirs[d][3:-1])
             self.directories = list(set(self.directories)) # remove dupes
-            logging.info(f'Connected to {self.cfg.hostname}')
+            success(f'Connected to {self.cfg.hostname}')
         except ValueError as e:
             raise rrgit_error('')

@@ -6,10 +6,29 @@ def log(msg):
     print(msg)
 
 def error(msg):
-    print(f'{Fore.RED}{msg}{Style.RESET_ALL}')
+    print(f'{Fore.RED}{msg}{Fore.RESET}')
     
 def warn(msg):
-    print(f'{Fore.YELLOW}{msg}{Style.RESET_ALL}')
+    print(f'{Fore.YELLOW}{msg}{Fore.RESET}')
     
-def green(msg):
-    print(f'{Fore.GREEN}{msg}{Style.RESET_ALL}')
+def success(msg):
+    print(f'{Fore.GREEN}{msg}{Fore.RESET}')
+    
+print_red = error
+print_green = success
+print_yellow = warn
+
+text_colors = {
+    'black': Fore.BLACK,
+    'red': Fore.RED,
+    'green': Fore.GREEN,
+    'yellow': Fore.YELLOW,
+    'blue': Fore.BLUE,
+    'magenta': Fore.MAGENTA,
+    'cyan': Fore.CYAN,
+    'white': Fore.WHITE,
+}
+
+def color_string(txt, color):
+    c = text_colors.get(color, Fore.WHITE)
+    return f'{c}{txt}{Fore.RESET}'

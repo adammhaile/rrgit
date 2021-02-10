@@ -1,6 +1,6 @@
 from . command import Command
-from .. util import rrgit_error
-from .. log import error, warn, log
+from .. util import rrgit_error, data_size
+from .. log import *
 
 import os
 from datetime import datetime
@@ -26,32 +26,41 @@ class Clone(Command):
         
         super().__init__(cfg, args)
         
-        if len(os.listdir(self.args.directory)) > 0:
+        if os.path.exists(self.args.directory) and len(os.listdir(self.args.directory)) > 0:
             raise rrgit_error(f"fatal: destination path '{self.args.directory}' already exists and is not an empty directory.")
             
         self.connect()
         
     def run(self):
-        def get_dir(path):
+        def get_dir(path, indent):
             dirpath = os.path.join(self.cfg.dir, path)
             os.makedirs(dirpath, exist_ok=True)
             items = self.dwa.get_directory(path)
-            for i in items:
+            num_items = len(items)
+            for n in range(num_items):
+                i = items[n]
+                if n == (num_items - 1):
+                    tree_char = '└─'
+                    new_indent = indent + '  '
+                else:
+                    tree_char = '├─'
+                    new_indent = indent + '│ '
+                
                 if i['type'] == 'd':
-                    log(i['name'])
-                    get_dir(path + '/' + i['name'])
+                    log(f"{indent}{tree_char}┐{i['name']}/")
+                    get_dir(path + '/' + i['name'], new_indent)
                 elif i['type'] == 'f':
                     name = i['name']
-                    log(f'{path}/{name}')
-                    # print(f'{path}/{name}', end='\r')
+                    fi = self.dwa.get_fileinfo(name, path)
+                    fsize = color_string('(' + data_size(fi['size']) + ')', 'cyan')
+                    log(f'{indent}{tree_char} {name} {fsize}')
                     data = None
-                    try:
-                        data = self.dwa.get_file(name, path, True)
-                    except ValueError as e:
-                        warn(f'Error: Could not retrieve {path}/{name}')
+                    # try:
+                    #     data = self.dwa.get_file(name, path, True)
+                    # except ValueError as e:
+                    #     warn(f'Error: Could not retrieve {path}/{name}')
                     
                     if data is not None:
-                        fi = self.dwa.get_fileinfo(name, path)
                         lastmod = fi['lastModified']
                         lm = datetime.strptime(lastmod, '%Y-%m-%dT%H:%M:%S')
                         lm = datetime.timestamp(lm)
@@ -61,12 +70,13 @@ class Clone(Command):
                             of.write(data)
                             
                         os.utime(outpath, (now, lm))
-                            
+        
+        log(f'Cloning from {self.cfg.hostname} ...')
         for d in self.directories:
-            if d == 'www':
-                continue
-            # log(d)
-            get_dir(d)
+            # if d != 'www':
+            #     continue
+            log(f'{d}/')
+            get_dir(d, ' ')
     
     def finalize(self):
         pass
