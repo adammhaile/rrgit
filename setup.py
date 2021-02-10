@@ -24,7 +24,8 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'rrgit = rrgit.cli:main'
+            'rrgit = rrgit:main',
+            'rrg = rrgit:main',
         ]
     },
     install_requires=INSTALL_REQUIRES,

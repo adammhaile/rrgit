@@ -1,2 +1,3 @@
 duetwebapi
 pyyaml
+colorama
