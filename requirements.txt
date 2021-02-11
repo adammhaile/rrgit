@@ -1,3 +1,4 @@
 duetwebapi
 pyyaml
 colorama
+pathspec

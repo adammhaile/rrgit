@@ -2,7 +2,7 @@ from colorama import init, Fore, Back, Style
 
 init()
 
-def log(msg):
+def info(msg):
     print(msg)
 
 def error(msg):

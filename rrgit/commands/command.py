@@ -2,6 +2,8 @@ from .. log import *
 from .. util import rrgit_error
 from duetwebapi import DuetWebAPI as DWA
 
+TIMESTAMP_FMT = '%Y-%m-%dT%H:%M:%S'
+
 class Command():
     @staticmethod
     def add_parser(sp):

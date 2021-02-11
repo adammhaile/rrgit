@@ -1,4 +1,4 @@
-from . command import Command
+from . command import Command, TIMESTAMP_FMT
 from .. util import rrgit_error, data_size
 from .. log import *
 
@@ -47,22 +47,27 @@ class Clone(Command):
                     new_indent = indent + '│ '
                 
                 if i['type'] == 'd':
-                    log(f"{indent}{tree_char}┐{i['name']}/")
-                    get_dir(path + '/' + i['name'], new_indent)
+                    dir_path = path + '/' + i['name']
+                    match_path = dir_path + '/'
+                    if self.cfg.ignore_spec.match_file(match_path):
+                        info(f"{indent}{tree_char}┐{i['name']}")
+                        get_dir(dir_path, new_indent)
                 elif i['type'] == 'f':
                     name = i['name']
+                    if not self.cfg.ignore_spec.match_file(path + '/' + name):
+                        continue
                     fi = self.dwa.get_fileinfo(name, path)
                     fsize = color_string('(' + data_size(fi['size']) + ')', 'cyan')
-                    log(f'{indent}{tree_char} {name} {fsize}')
+                    info(f'{indent}{tree_char} {name} {fsize}')
                     data = None
-                    # try:
-                    #     data = self.dwa.get_file(name, path, True)
-                    # except ValueError as e:
-                    #     warn(f'Error: Could not retrieve {path}/{name}')
+                    try:
+                        data = self.dwa.get_file(name, path, True)
+                    except ValueError as e:
+                        warn(f'Error: Could not retrieve {path}/{name}')
                     
                     if data is not None:
                         lastmod = fi['lastModified']
-                        lm = datetime.strptime(lastmod, '%Y-%m-%dT%H:%M:%S')
+                        lm = datetime.strptime(lastmod, TIMESTAMP_FMT)
                         lm = datetime.timestamp(lm)
                         now = datetime.timestamp(datetime.now())
                         outpath = os.path.join(dirpath, name)
@@ -71,14 +76,13 @@ class Clone(Command):
                             
                         os.utime(outpath, (now, lm))
         
-        log(f'Cloning from {self.cfg.hostname} ...')
+        info(f'Cloning from {self.cfg.hostname} ...')
+        os.makedirs(self.cfg.dir, exist_ok=True)
         for d in self.directories:
-            # if d != 'www':
-            #     continue
-            log(f'{d}/')
-            get_dir(d, ' ')
+            if self.cfg.ignore_spec.match_file(d + '/'):
+                info(f'{d}')
+                get_dir(d, '  ')
     
     def finalize(self):
-        pass
-        # self.cfg.write()
+        self.cfg.write()
         
