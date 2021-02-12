@@ -39,7 +39,6 @@ class Config():
         flip_ignore = ['**', '!.rrgit', '!.rrgitignore']
         for i in range(len(self.ignore)):
             flip_ignore.append('!' + self.ignore[i])
-        print(flip_ignore)
         self.ignore_spec = pathspec.PathSpec.from_lines('gitwildmatch', flip_ignore)
         
     def set_hostname(self, hostname):

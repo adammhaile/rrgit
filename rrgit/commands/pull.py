@@ -19,7 +19,11 @@ class Pull(Command):
         self.connect()
         
     def run(self):
+        build_status_report(self.dwa, self.cfg, self.directories)
+        return
         remote_files = build_remote_file_map(self.dwa, self.cfg, self.directories)
+        local_files = build_local_file_map(self.cfg)
+        
         paths = list(remote_files.keys())
         paths.sort()
         for path in paths:

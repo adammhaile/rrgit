@@ -1,6 +1,7 @@
 from . command import Command
 from .. util import rrgit_error, data_size, TIMESTAMP_FMT
 from .. log import *
+from . file_ops import *
 
 import os
 from datetime import datetime
@@ -32,56 +33,33 @@ class Clone(Command):
         self.connect()
         
     def run(self):
-        def get_dir(path, indent):
-            dirpath = os.path.join(self.cfg.dir, path)
-            os.makedirs(dirpath, exist_ok=True)
-            items = self.dwa.get_directory(path)
-            num_items = len(items)
-            for n in range(num_items):
-                i = items[n]
-                if n == (num_items - 1):
-                    tree_char = '└─'
-                    new_indent = indent + '  '
-                else:
-                    tree_char = '├─'
-                    new_indent = indent + '│ '
-                
-                if i['type'] == 'd':
-                    dir_path = path + '/' + i['name']
-                    match_path = dir_path + '/'
-                    if self.cfg.ignore_spec.match_file(match_path):
-                        info(f"{indent}{tree_char}┐{i['name']}")
-                        get_dir(dir_path, new_indent)
-                elif i['type'] == 'f':
-                    name = i['name']
-                    if not self.cfg.ignore_spec.match_file(path + '/' + name):
-                        continue
-                    fi = self.dwa.get_fileinfo(name, path)
-                    fsize = color_string('(' + data_size(fi['size']) + ')', 'cyan')
-                    info(f'{indent}{tree_char} {name} {fsize}')
-                    data = None
-                    try:
-                        data = self.dwa.get_file(name, path, True)
-                    except ValueError as e:
-                        warn(f'Error: Could not retrieve {path}/{name}')
-                    
-                    if data is not None:
-                        lastmod = fi['lastModified']
-                        lm = datetime.strptime(lastmod, TIMESTAMP_FMT)
-                        lm = datetime.timestamp(lm)
-                        now = datetime.timestamp(datetime.now())
-                        outpath = os.path.join(dirpath, name)
-                        with open(outpath, 'wb') as of:
-                            of.write(data)
-                            
-                        os.utime(outpath, (now, lm))
-        
-        info(f'Cloning from {self.cfg.hostname} ...')
+        status(f'Cloning from {self.cfg.hostname} ...')
         os.makedirs(self.cfg.dir, exist_ok=True)
-        for d in self.directories:
-            if self.cfg.ignore_spec.match_file(d + '/'):
-                info(f'{d}')
-                get_dir(d, '  ')
+                
+        remote_files = build_remote_file_map(self.dwa, self.cfg, self.directories)
+        paths = list(remote_files.keys())
+        paths.sort()
+        status('Downloading files...')
+        for path in paths:
+            fo = remote_files[path]
+            fsize = color_string('(' + fo.sizestr + ')', 'yellow')
+            info(f'{path} {fsize}')
+            data = None
+            try:
+                data = fo.getFileData(self.dwa)
+            except ValueError as e:
+                warn(f'Error: Could not retrieve {path}')
+            
+            if data is not None:
+                out_dir = os.path.join(self.cfg.dir, fo.dir)
+                if not os.path.isdir(out_dir):
+                    os.makedirs(out_dir, exist_ok=True)
+                outpath = os.path.join(self.cfg.dir, path)
+                with open(outpath, 'wb') as of:
+                    of.write(data)
+                    
+                now = datetime.timestamp(datetime.now())
+                os.utime(outpath, (now, fo.timestamp))
     
     def finalize(self):
         self.cfg.write()

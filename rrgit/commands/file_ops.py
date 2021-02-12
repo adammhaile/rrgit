@@ -40,12 +40,16 @@ class FileObj():
                 lm = datetime.timestamp(lm)
                 self.setTime(lm)
                 self.setSize(fi['size'])
+                
+    def getFileData(self, dwa):
+        return dwa.get_file(self.name, self.dir, True)
             
         
     def __str__(self):
         return str(self.__dict__)
 
 def build_local_file_map(cfg):
+    status('Building local file listing...')
     local_map = {}
     files = cfg.ignore_spec.match_tree(cfg.dir)
     for f in files:
@@ -63,6 +67,7 @@ def build_local_file_map(cfg):
     return local_map
     
 def build_remote_file_map(dwa, cfg, remote_directories):
+    status('Fetching remote file listing...')
     remote_files = {}
     def get_dir(path):
         items = dwa.get_directory(path)
@@ -74,7 +79,6 @@ def build_remote_file_map(dwa, cfg, remote_directories):
             elif i['type'] == 'f':
                 name = i['name']
                 fpath = path + '/' + name
-                success(fpath)
                 if not cfg.ignore_spec.match_file(fpath):
                         continue
                 fo = FileObj(FileType.Remote)
@@ -87,3 +91,30 @@ def build_remote_file_map(dwa, cfg, remote_directories):
             
     return remote_files
     
+def build_status_report(dwa, cfg, remote_directories):
+    remote_files = build_remote_file_map(dwa, cfg, remote_directories)
+    local_files = build_local_file_map(cfg)
+    
+    remote_paths = set(remote_files.keys())
+    local_paths = set(local_files.keys())
+    
+    result = {
+        'remote_only' : remote_paths - local_paths,
+        'local_only' : local_paths - remote_paths,
+        'shared' : remote_paths & local_paths,
+        'remote_newer' : {},
+        'local_newer' : {},
+        'diff_size' : {},
+    }
+    
+    for path in result['shared']:
+        fo_remote = remote_files[path]
+        fo_local = local_files[path]
+        if fo_remote.timestamp > fo_local.timestamp:
+            result['remote_newer'][path] = fo_remote
+        elif fo_local.timestamp > fo_remote.timestamp:
+            result['local_newer'][path] = fo_local
+        elif fo_remote.size != fo_local.size:
+            result['diff_size'][path] = (fo_remote, fo_local)
+
+    return result
