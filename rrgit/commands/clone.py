@@ -1,5 +1,5 @@
-from . command import Command, TIMESTAMP_FMT
-from .. util import rrgit_error, data_size
+from . command import Command
+from .. util import rrgit_error, data_size, TIMESTAMP_FMT
 from .. log import *
 
 import os

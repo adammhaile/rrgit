@@ -1,6 +1,7 @@
-from . command import Command, TIMESTAMP_FMT
-from .. util import rrgit_error, data_size
+from . command import Command
+from .. util import rrgit_error, data_size, TIMESTAMP_FMT
 from .. log import *
+from . file_ops import *
 
 import os
 from datetime import datetime
@@ -17,23 +18,17 @@ class Pull(Command):
         self.local_map = {}
         self.connect()
         
-    def build_local_file_map(self):
-        def on_error(e):
-            raise(e)
-            
-        self.local_map = {}
-        files = self.cfg.ignore_spec.match_tree(self.cfg.dir, on_error=on_error)
-        for f in files:
-            full_path = os.path.join(self.cfg.dir, f)
-            finfo = os.stat(full_path)
-            self.local_map[f] = (finfo.st_size, finfo.st_mtime, datetime.fromtimestamp(finfo.st_mtime).strftime(TIMESTAMP_FMT))
-
-        for k, v in self.local_map.items():
-            warn(f'{k} -> {v}')
-        
-        
     def run(self):
-        self.build_local_file_map()
+        remote_files = build_remote_file_map(self.dwa, self.cfg, self.directories)
+        paths = list(remote_files.keys())
+        paths.sort()
+        for path in paths:
+            warn(f'{path} -> {remote_files[path]}')
+            
+        # local_map = build_local_file_map(self.cfg)
+        # for k, v in local_map.items():
+        #     warn(f'{k} -> {v}')
+            
         # def get_dir(path):
         #     dirpath = os.path.join(self.cfg.dir, path)
         #     os.makedirs(dirpath, exist_ok=True)
