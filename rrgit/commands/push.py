@@ -7,11 +7,11 @@ import os
 from datetime import datetime
 import glob
 
-class Pull(Command):
+class Push(Command):
     @staticmethod
     def add_parser(sp):
-        p = sp.add_parser('pull', 
-            help='Pull changes from RRF/Duet device')
+        p = sp.add_parser('push', 
+            help='Push changes to RRF/Duet device')
         p.add_argument('--force', '-f', action='store_true', default=False)
         
     def __init__(self, cfg, args):
@@ -21,7 +21,7 @@ class Pull(Command):
     def run(self):
         report = build_status_report(self.dwa, self.cfg, self.directories)
         
-        ro = report['remote_only']
+        lo = report['local_only']
         
         rn = list(report['remote_newer'].keys())
         rn.sort()
@@ -30,37 +30,37 @@ class Pull(Command):
         ds = list(report['diff_size'].keys())
         ds.sort()
         
-        if not self.args.force and (len(ln) > 0 or len(ds) > 0) :
-            if len(ln) > 0:
-                error('The following files have newer changes locally.')
-                for path in ln:
+        if not self.args.force and (len(rn) > 0 or len(ds) > 0) :
+            if len(rn) > 0:
+                error('The following files have newer remote changes.')
+                for path in rn:
                     info(f'- {path}')
             if len(ds) > 0:
                 error('The following files differ only in size.')
                 for path in ds:
                     info(f'- {path}')
-            error('Use -f to force overwritting local copies.')
+            error('Use -f to force overwritting remote copies.')
             return
             
-        if len(ro) > 0 or len(rn) > 0 or len(ln) > 0 or len(ds) > 0:
-            status('Fetching files from remote...')
-            for path in ro:
+        if len(lo) > 0 or len(rn) > 0 or len(ln) > 0 or len(ds) > 0:
+            status('Pushing files to remote...')
+            for path in lo:
                 status(f'- {path}')
-                report['remote_files'][path].pullFile(self.dwa, self.cfg.dir)
-    
-            for path, fo in report["remote_newer"].items():
-                status(f'- {path}')
-                fo.pullFile(self.dwa, self.cfg.dir)
+                report['local_files'][path].pushFile(self.dwa, self.cfg.dir)
                 
-            for path in ln:
-                fo = report['remote_files'][path]
+            for path in rn:
+                fo = report['local_files'][path]
                 status(f'- {path}')
-                fo.pullFile(self.dwa, self.cfg.dir)
+                fo.pushFile(self.dwa, self.cfg.dir)
+                
+            for path, fo in report["local_newer"].items():
+                status(f'- {path}')
+                fo.pushFile(self.dwa, self.cfg.dir)
                 
             for path, fo in report["diff_size"].items():
                 status(f'- {path}')
-                rfo = fo[0]
-                rfo.pullFile(self.dwa, self.cfg.dir)
+                lfo = fo[1]
+                lfo.pushFile(self.dwa, self.cfg.dir)
         else:
             success('No changes detected')
         

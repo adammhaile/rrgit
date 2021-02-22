@@ -19,12 +19,58 @@ class Status(Command):
         
     def run(self):
         report = build_status_report(self.dwa, self.cfg, self.directories)
-        status(f'Remote Only: {report["remote_only"]}')
-        status(f'Local Only: {report["local_only"]}')
-        status(f'Shared: {report["shared"]}')
-        status(f'Remote Newer: {list(report["remote_newer"].keys())}')
-        status(f'Local Newer: {list(report["local_newer"].keys())}')
-        status(f'Diff Size: {list(report["diff_size"].keys())}')
+        
+        ro = report['remote_only']
+        lo = report['local_only']
+        shared = report['shared']
+        
+        rn = list(report["remote_newer"].keys())
+        rn.sort()
+        ln = list(report["local_newer"].keys())
+        ln.sort()
+        ds = list(report["diff_size"].keys())
+        ds.sort()
+        
+        nl()
+        
+        diff = False
+        if len(ro) > 0:
+            diff = True
+            header = color_string('remote only:\t', 'red')
+            for path in ro:
+                info(f'{header}{path}')
+            nl()
+                
+        if len(lo) > 0:
+            diff = True
+            header = color_string('local only:\t', 'red')
+            for path in lo:
+                info(f'{header}{path}')
+            nl()
+                
+        if len(rn) > 0:
+            diff = True
+            header = color_string('remote newer:\t', 'red')
+            for path in rn:
+                info(f'{header}{path}')
+            nl()
+                
+        if len(ln) > 0:
+            diff = True
+            header = color_string('local newer:\t', 'red')
+            for path in ln:
+                info(f'{header}{path}')
+            nl()
+                
+        if len(ds) > 0:
+            diff = True
+            header = color_string('diff size:\t', 'red')
+            for path in ds:
+                info(f'{header}{path}')
+            nl()
+                
+        if not diff:
+            success('Remote and Local are identical')
         
     def finalize(self):
         pass

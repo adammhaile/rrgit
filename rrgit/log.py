@@ -20,6 +20,8 @@ def color_string(txt, color):
 def cprint(msg, color):
     print(color_string(msg, color))
     
+def nl():
+    print()
 def info(msg):
     print(msg)
 

@@ -1,6 +1,7 @@
 from .. util import rrgit_error, data_size, TIMESTAMP_FMT
 from .. log import *
 import enum
+import copy
 
 import os
 from datetime import datetime
@@ -13,6 +14,7 @@ class FileObj():
     def __init__(self, filetype = FileType.Local):
         self.name = None
         self.dir = None
+        self.path = None
         self.size = 0
         self.sizestr = None
         self.timestamp = 0
@@ -23,6 +25,7 @@ class FileObj():
         # filepath should be relative to root
         self.name = os.path.basename(filepath)
         self.dir = filepath[:-1*len(self.name)]
+        self.path = filepath
         
     def setTime(self, timestamp):
         self.timestamp = timestamp
@@ -44,7 +47,46 @@ class FileObj():
     def getFileData(self, dwa):
         return dwa.get_file(self.name, self.dir, True)
             
-        
+    def pullFile(self, dwa, local_dir):
+        if self.type == FileType.Remote:
+            data = self.getFileData(dwa)
+            if data is not None:
+                status(f'Writing {self.path}')
+                out_dir = os.path.join(local_dir, self.dir)
+                if not os.path.isdir(out_dir):
+                    os.makedirs(out_dir, exist_ok=True)
+                outpath = os.path.join(local_dir, self.dir, self.name)
+                with open(outpath, 'wb') as of:
+                    of.write(data)
+                    
+                now = datetime.timestamp(datetime.now())
+                os.utime(outpath, (now, self.timestamp))
+                
+    def pushFile(self, dwa, local_dir):
+        if self.type == FileType.Local:
+            local_path = os.path.join(local_dir, self.path)
+            try:
+                with open(local_path, 'rb') as f:
+                    data = f.read()
+            except:
+                error(f'Error: Failed to read ./{self.path}')
+            
+            try:
+                dwa.upload_file(data, self.name, self.dir)
+            except ValueError:
+                error(f'Error: API failure pushing ./{self.path}')
+            
+            # now fetch remote's timestamp and write it to local
+            # only way to ensure they match
+            rfo = copy.deepcopy(self)
+            rfo.type = FileType.Remote
+            rfo.getRemoteData(dwa)
+            
+            now = datetime.timestamp(datetime.now())
+            os.utime(local_path, (now, rfo.timestamp))
+                
+            
+                    
     def __str__(self):
         return str(self.__dict__)
 
@@ -90,6 +132,7 @@ def build_remote_file_map(dwa, cfg, remote_directories):
             get_dir(d)
             
     return remote_files
+            
     
 def build_status_report(dwa, cfg, remote_directories):
     remote_files = build_remote_file_map(dwa, cfg, remote_directories)
@@ -98,10 +141,21 @@ def build_status_report(dwa, cfg, remote_directories):
     remote_paths = set(remote_files.keys())
     local_paths = set(local_files.keys())
     
+    ro = list(remote_paths - local_paths)
+    ro.sort()
+    
+    lo = list(local_paths - remote_paths)
+    lo.sort()
+    
+    shared = list(remote_paths & local_paths)
+    shared.sort()
+    
     result = {
-        'remote_only' : remote_paths - local_paths,
-        'local_only' : local_paths - remote_paths,
-        'shared' : remote_paths & local_paths,
+        'remote_only' : ro,
+        'remote_files': remote_files,
+        'local_only' : lo,
+        'local_files': local_files,
+        'shared' : shared,
         'remote_newer' : {},
         'local_newer' : {},
         'diff_size' : {},
@@ -118,3 +172,4 @@ def build_status_report(dwa, cfg, remote_directories):
             result['diff_size'][path] = (fo_remote, fo_local)
 
     return result
+    
