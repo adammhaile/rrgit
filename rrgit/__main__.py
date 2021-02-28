@@ -1,0 +1,3 @@
+import rrgit
+
+rrgit.main()

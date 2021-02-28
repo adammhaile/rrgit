@@ -13,3 +13,10 @@ def data_size(num, suffix='B'):
                 return f'{num:.1f} {unit}{suffix}'
         num /= 1024.0
     return f'{num:.1f} Yi{suffix}'
+    
+def yes_or_no(question):
+    reply = str(raw_input(question+' [y|n]: ')).lower().strip()
+    if reply[0] == 'y':
+        return True
+    else:
+        return False

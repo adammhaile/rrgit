@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+set -o noglob
+python -m rrgit "$@"
+set +o noglob

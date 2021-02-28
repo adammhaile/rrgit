@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup, find_packages
+import os
 
 with open('./requirements.txt') as f:
     INSTALL_REQUIRES = f.read().splitlines()
@@ -10,6 +11,18 @@ def _get_version():
     filename = join(dirname(abspath(__file__)), 'rrgit', 'VERSION')
     return open(filename).read().strip()
 
+ENTRY_POINTS = None
+SCRIPTS = None
+
+if True: #os.name == 'nt':
+    ENTRY_POINTS = {
+            'console_scripts': [
+                'rrgit = rrgit:main',
+                'rrg = rrgit:main',
+            ]
+        }
+# else:
+#     SCRIPTS = ['scripts/rrgit']
 
 setup(
     name="rrgit",
@@ -22,12 +35,8 @@ setup(
     license="GNU General Public License v3 (GPLv3)",
     packages=find_packages(exclude=[]),
     include_package_data=True,
-    entry_points={
-        'console_scripts': [
-            'rrgit = rrgit:main',
-            'rrg = rrgit:main',
-        ]
-    },
+    entry_points=ENTRY_POINTS,
+    scripts=SCRIPTS,
     install_requires=INSTALL_REQUIRES,
     dependency_links=[],
     classifiers=[

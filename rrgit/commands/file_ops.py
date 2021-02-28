@@ -3,6 +3,8 @@ from .. log import *
 import enum
 import copy
 
+import pathspec
+
 import os
 from datetime import datetime
 
@@ -95,6 +97,7 @@ def build_local_file_map(cfg):
     local_map = {}
     files = cfg.ignore_spec.match_tree(cfg.dir)
     for f in files:
+        f = f.replace('\\', '/')
         fo = FileObj()
         fo.setPath(f)
         
@@ -171,5 +174,21 @@ def build_status_report(dwa, cfg, remote_directories):
         elif fo_remote.size != fo_local.size:
             result['diff_size'][path] = (fo_remote, fo_local)
 
+    return result
+    
+def gen_pathspec(patterns):
+    # lines = []
+    # for p in patterns:
+    #     lines.append('!' + p)
+    # print(lines)
+    return pathspec.PathSpec.from_lines('gitwildmatch', patterns)
+    
+def filter_by_patterns(file_map, patterns):
+    print(patterns)
+    spec = gen_pathspec(patterns)
+    result = {}
+    for path, fo in file_map.items():
+        if spec.match_file(path):
+            result[path] = fo
     return result
     
