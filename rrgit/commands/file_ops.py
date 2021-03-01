@@ -53,7 +53,6 @@ class FileObj():
         if self.type == FileType.Remote:
             data = self.getFileData(dwa)
             if data is not None:
-                status(f'Writing {self.path}')
                 out_dir = os.path.join(local_dir, self.dir)
                 if not os.path.isdir(out_dir):
                     os.makedirs(out_dir, exist_ok=True)
@@ -74,7 +73,7 @@ class FileObj():
                 error(f'Error: Failed to read ./{self.path}')
             
             try:
-                dwa.upload_file(data, self.name, self.dir)
+                res = dwa.upload_file(data, self.name, self.dir)
             except ValueError:
                 error(f'Error: API failure pushing ./{self.path}')
             
@@ -92,12 +91,18 @@ class FileObj():
     def __str__(self):
         return str(self.__dict__)
 
-def build_local_file_map(cfg):
+def build_local_file_map(cfg, remote_directories):
     status('Building local file listing...')
     local_map = {}
     files = cfg.ignore_spec.match_tree(cfg.dir)
     for f in files:
         f = f.replace('\\', '/')
+        split = f.split('/')
+        if len(split) == 0: 
+            continue
+        base = split[0]
+        if base not in remote_directories:
+            continue  # skip invalid local dirs
         fo = FileObj()
         fo.setPath(f)
         
@@ -139,7 +144,7 @@ def build_remote_file_map(dwa, cfg, remote_directories):
     
 def build_status_report(dwa, cfg, remote_directories):
     remote_files = build_remote_file_map(dwa, cfg, remote_directories)
-    local_files = build_local_file_map(cfg)
+    local_files = build_local_file_map(cfg, remote_directories)
     
     remote_paths = set(remote_files.keys())
     local_paths = set(local_files.keys())

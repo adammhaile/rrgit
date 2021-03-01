@@ -1,5 +1,5 @@
 from . command import Command
-from .. util import rrgit_error, data_size, TIMESTAMP_FMT
+from .. util import *
 from .. log import *
 from . file_ops import *
 
@@ -43,8 +43,12 @@ class Push(Command):
         ds.sort()
             
         if push_files:
-            for path, fo in push_files.items():
-                status(f'- {path}')
+            status('Pushing files to remote...')
+            paths = list(push_files.keys())
+            paths.sort()
+            for path in paths:
+                fo = push_files[path]
+                info(f'- {path}')
                 fo.pushFile(self.dwa, self.cfg.dir)
         elif len(lo) > 0 or len(rn) > 0 or len(ln) > 0 or len(ds) > 0:
             if not self.args.yes and (len(rn) > 0 or len(ds) > 0) :
@@ -56,24 +60,24 @@ class Push(Command):
                     error('The following files differ only in size.')
                     for path in ds:
                         info(f'- {path}')
-                error('Use -y to confirm overwritting remote copies.')
-                return
+                if not yes_or_no('Overwrite remote with local?'):
+                    return
             status('Pushing files to remote...')
             for path in lo:
-                status(f'- {path}')
+                info(f'- {path}')
                 report['local_files'][path].pushFile(self.dwa, self.cfg.dir)
                 
             for path in rn:
                 fo = report['local_files'][path]
-                status(f'- {path}')
+                info(f'- {path}')
                 fo.pushFile(self.dwa, self.cfg.dir)
                 
             for path, fo in report["local_newer"].items():
-                status(f'- {path}')
+                info(f'- {path}')
                 fo.pushFile(self.dwa, self.cfg.dir)
                 
             for path, fo in report["diff_size"].items():
-                status(f'- {path}')
+                info(f'- {path}')
                 lfo = fo[1]
                 lfo.pushFile(self.dwa, self.cfg.dir)
         else:

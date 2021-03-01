@@ -1,3 +1,5 @@
+from . log import *
+
 class rrgit_error(Exception):
     pass
 
@@ -15,8 +17,10 @@ def data_size(num, suffix='B'):
     return f'{num:.1f} Yi{suffix}'
     
 def yes_or_no(question):
-    reply = str(raw_input(question+' [y|n]: ')).lower().strip()
-    if reply[0] == 'y':
+    msg = question+' [y|n]: '
+    msg = color_string(msg, 'yellow')
+    reply = str(input(msg)).lower().strip()
+    if len(reply) and reply[0] == 'y':
         return True
     else:
         return False

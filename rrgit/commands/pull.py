@@ -1,5 +1,5 @@
 from . command import Command
-from .. util import rrgit_error, data_size, TIMESTAMP_FMT
+from .. util import *
 from .. log import *
 from . file_ops import *
 
@@ -43,8 +43,12 @@ class Pull(Command):
         ds.sort()
             
         if pull_files:
-            for path, fo in pull_files.items():
-                status(f'- {path}')
+            status('Fetching files from remote...')
+            paths = list(pull_files.keys())
+            paths.sort()
+            for path in paths:
+                fo = pull_files[path]
+                info(f'- {path}')
                 fo.pullFile(self.dwa, self.cfg.dir)
         elif len(ro) > 0 or len(rn) > 0 or len(ln) > 0 or len(ds) > 0:
             if not self.args.yes and (len(ln) > 0 or len(ds) > 0) :
@@ -56,25 +60,25 @@ class Pull(Command):
                     error('The following files differ only in size.')
                     for path in ds:
                         info(f'- {path}')
-                error('Use -y to confirm overwritting local copies.')
-                return
+                if not yes_or_no('Overwrite local with remote?'):
+                    return
             
             status('Fetching files from remote...')
             for path in ro:
-                status(f'- {path}')
+                info(f'- {path}')
                 report['remote_files'][path].pullFile(self.dwa, self.cfg.dir)
     
             for path, fo in report["remote_newer"].items():
-                status(f'- {path}')
+                info(f'- {path}')
                 fo.pullFile(self.dwa, self.cfg.dir)
                 
             for path in ln:
                 fo = report['remote_files'][path]
-                status(f'- {path}')
+                info(f'- {path}')
                 fo.pullFile(self.dwa, self.cfg.dir)
                 
             for path, fo in report["diff_size"].items():
-                status(f'- {path}')
+                info(f'- {path}')
                 rfo = fo[0]
                 rfo.pullFile(self.dwa, self.cfg.dir)
         else:
