@@ -32,7 +32,6 @@ class Pull(Command):
             pull_files = report['remote_files']
             if len(self.args.file_patterns) > 0:
                 pull_files = filter_by_patterns(pull_files, self.args.file_patterns)
-                print(pull_files)
         
         ro = report['remote_only']
         
@@ -42,24 +41,24 @@ class Pull(Command):
         ln.sort()
         ds = list(report['diff_size'].keys())
         ds.sort()
-        
-        if not self.args.yes and (len(ln) > 0 or len(ds) > 0) :
-            if len(ln) > 0:
-                error('The following files have newer changes locally.')
-                for path in ln:
-                    info(f'- {path}')
-            if len(ds) > 0:
-                error('The following files differ only in size.')
-                for path in ds:
-                    info(f'- {path}')
-            error('Use -y to confirm overwritting local copies.')
-            return
             
         if pull_files:
             for path, fo in pull_files.items():
                 status(f'- {path}')
                 fo.pullFile(self.dwa, self.cfg.dir)
         elif len(ro) > 0 or len(rn) > 0 or len(ln) > 0 or len(ds) > 0:
+            if not self.args.yes and (len(ln) > 0 or len(ds) > 0) :
+                if len(ln) > 0:
+                    error('The following files have newer changes locally.')
+                    for path in ln:
+                        info(f'- {path}')
+                if len(ds) > 0:
+                    error('The following files differ only in size.')
+                    for path in ds:
+                        info(f'- {path}')
+                error('Use -y to confirm overwritting local copies.')
+                return
+            
             status('Fetching files from remote...')
             for path in ro:
                 status(f'- {path}')
