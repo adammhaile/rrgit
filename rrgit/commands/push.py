@@ -2,6 +2,7 @@ from . command import Command
 from .. util import *
 from .. log import *
 from . file_ops import *
+from .. import symbols
 
 import os
 from datetime import datetime
@@ -25,8 +26,6 @@ class Push(Command):
         self.connect()
         
     def run(self):
-        push = color_string('⇖', 'green')
-        delete = color_string('D', 'red')
         report = build_status_report(self.dwa, self.cfg, self.directories)
         
         lo = report['local_only']
@@ -51,11 +50,11 @@ class Push(Command):
             paths.sort()
             for path in paths:
                 fo = push_files[path]
-                info(f'{push} {path}')
+                info(f'{symbols.push} {path}')
                 fo.pushFile(self.dwa, self.cfg.dir)
                 
             for path in ro:
-                info(f'{delete} {path}')
+                info(f'{symbols.delete} {path}')
                 report['remote_files'][path].delete(self.dwa)
         elif len(lo) > 0 or len(ro) or len(rn) > 0 or len(ln) > 0 or len(ds) > 0:
             if not self.args.yes and (len(rn) > 0 or len(ro) > 0 or len(ds) > 0) :
@@ -75,25 +74,25 @@ class Push(Command):
                     return
             status('Pushing changes to remote...')
             for path in lo:
-                info(f'{push} {path}')
+                info(f'{symbols.push} {path}')
                 report['local_files'][path].pushFile(self.dwa, self.cfg.dir)
                 
             for path in rn:
                 fo = report['local_files'][path]
-                info(f'{push} {path}')
+                info(f'{symbols.push} {path}')
                 fo.pushFile(self.dwa, self.cfg.dir)
                 
             for path, fo in report["local_newer"].items():
-                info(f'{push} {path}')
+                info(f'{symbols.push} {path}')
                 fo.pushFile(self.dwa, self.cfg.dir)
                 
             for path, fo in report["diff_size"].items():
-                info(f'{push} {path}')
+                info(f'{symbols.push} {path}')
                 lfo = fo[1]
                 lfo.pushFile(self.dwa, self.cfg.dir)
                 
             for path in ro:
-                info(f'{delete} {path}')
+                info(f'{symbols.delete} {path}')
                 report['remote_files'][path].delete(self.dwa, self.cfg.dir)
         else:
             success('No changes detected')

@@ -2,6 +2,7 @@ from . command import Command
 from .. util import *
 from .. log import *
 from . file_ops import *
+from .. import symbols
 
 import os
 from datetime import datetime
@@ -25,9 +26,6 @@ class Pull(Command):
         self.connect()
         
     def run(self):
-        pull = color_string('⇘', 'green')
-        delete = color_string('D', 'red')
-        
         report = build_status_report(self.dwa, self.cfg, self.directories)
         
         pull_files = {}
@@ -52,10 +50,10 @@ class Pull(Command):
             paths.sort()
             for path in paths:
                 fo = pull_files[path]
-                info(f'{pull} {path}')
+                info(f'{symbols.pull} {path}')
                 fo.pullFile(self.dwa, self.cfg.dir)
             for path in lo:
-                info(f'{delete} {path}')
+                info(f'{symbols.delete} {path}')
                 report['local_files'][path].delete(self.dwa, self.cfg.dir)
         elif len(ro) > 0 or len(lo) > 0 or len(rn) > 0 or len(ln) > 0 or len(ds) > 0:
             if not self.args.yes and (len(ln) > 0 or len(ds) > 0 or len(lo) > 0) :
@@ -76,25 +74,25 @@ class Pull(Command):
             
             status('Pulling changes to local...')
             for path in ro:
-                info(f'{pull} {path}')
+                info(f'{symbols.pull} {path}')
                 report['remote_files'][path].pullFile(self.dwa, self.cfg.dir)
     
             for path, fo in report["remote_newer"].items():
-                info(f'{pull} {path}')
+                info(f'{symbols.pull} {path}')
                 fo.pullFile(self.dwa, self.cfg.dir)
                 
             for path in ln:
                 fo = report['remote_files'][path]
-                info(f'{pull} {path}')
+                info(f'{symbols.pull} {path}')
                 fo.pullFile(self.dwa, self.cfg.dir)
                 
             for path, fo in report["diff_size"].items():
-                info(f'{pull} {path}')
+                info(f'{symbols.pull} {path}')
                 rfo = fo[0]
                 rfo.pullFile(self.dwa, self.cfg.dir)
             
             for path in lo:
-                info(f'{delete} {path}')
+                info(f'{symbols.delete} {path}')
                 report['local_files'][path].delete(self.dwa, self.cfg.dir)
         else:
             success('No changes detected')
