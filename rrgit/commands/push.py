@@ -25,15 +25,18 @@ class Push(Command):
         self.connect()
         
     def run(self):
+        push = color_string('⇖', 'green')
+        delete = color_string('D', 'red')
         report = build_status_report(self.dwa, self.cfg, self.directories)
+        
+        lo = report['local_only']
+        ro = report['remote_only']
         
         push_files = {}
         if self.args.force or len(self.args.file_patterns) > 0:
             push_files = report['local_files']
             if len(self.args.file_patterns) > 0:
                 push_files = filter_by_patterns(push_files, self.args.file_patterns)
-        
-        lo = report['local_only']
         
         rn = list(report['remote_newer'].keys())
         rn.sort()
@@ -43,18 +46,26 @@ class Push(Command):
         ds.sort()
             
         if push_files:
-            status('Pushing files to remote...')
+            status('Pushing changes to remote...')
             paths = list(push_files.keys())
             paths.sort()
             for path in paths:
                 fo = push_files[path]
-                info(f'- {path}')
+                info(f'{push} {path}')
                 fo.pushFile(self.dwa, self.cfg.dir)
-        elif len(lo) > 0 or len(rn) > 0 or len(ln) > 0 or len(ds) > 0:
-            if not self.args.yes and (len(rn) > 0 or len(ds) > 0) :
+                
+            for path in ro:
+                info(f'{delete} {path}')
+                report['remote_files'][path].delete(self.dwa)
+        elif len(lo) > 0 or len(ro) or len(rn) > 0 or len(ln) > 0 or len(ds) > 0:
+            if not self.args.yes and (len(rn) > 0 or len(ro) > 0 or len(ds) > 0) :
                 if len(rn) > 0:
                     error('The following files have newer remote changes.')
                     for path in rn:
+                        info(f'- {path}')
+                if len(ro) > 0:
+                    error('The following files are remote only and will be deleted.')
+                    for path in ro:
                         info(f'- {path}')
                 if len(ds) > 0:
                     error('The following files differ only in size.')
@@ -62,24 +73,28 @@ class Push(Command):
                         info(f'- {path}')
                 if not yes_or_no('Overwrite remote with local?'):
                     return
-            status('Pushing files to remote...')
+            status('Pushing changes to remote...')
             for path in lo:
-                info(f'- {path}')
+                info(f'{push} {path}')
                 report['local_files'][path].pushFile(self.dwa, self.cfg.dir)
                 
             for path in rn:
                 fo = report['local_files'][path]
-                info(f'- {path}')
+                info(f'{push} {path}')
                 fo.pushFile(self.dwa, self.cfg.dir)
                 
             for path, fo in report["local_newer"].items():
-                info(f'- {path}')
+                info(f'{push} {path}')
                 fo.pushFile(self.dwa, self.cfg.dir)
                 
             for path, fo in report["diff_size"].items():
-                info(f'- {path}')
+                info(f'{push} {path}')
                 lfo = fo[1]
                 lfo.pushFile(self.dwa, self.cfg.dir)
+                
+            for path in ro:
+                info(f'{delete} {path}')
+                report['remote_files'][path].delete(self.dwa, self.cfg.dir)
         else:
             success('No changes detected')
         

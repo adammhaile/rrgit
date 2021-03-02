@@ -131,3 +131,6 @@ def main():
         
     except rrgit_error as e:
         error(e)
+    except KeyboardInterrupt:
+        error('\nInterrupt detected. Closing rrgit...')
+        pass

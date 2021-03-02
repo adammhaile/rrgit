@@ -48,6 +48,23 @@ class FileObj():
                 
     def getFileData(self, dwa):
         return dwa.get_file(self.name, self.dir, True)
+        
+    def delete(self, dwa, local_dir = None):
+        if self.type == FileType.Remote:
+            dwa.delete_file(self.name, self.dir)
+        elif local_dir is not None and self.type == FileType.Local:
+            path = os.path.join(local_dir, self.dir, self.name)
+            if os.path.exists(path):
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
+            base_dir = os.path.join(local_dir, self.dir)
+            if os.listdir(base_dir):
+                try:
+                    os.rmdir(base_dir)
+                except OSError:
+                    pass
             
     def pullFile(self, dwa, local_dir):
         if self.type == FileType.Remote:
