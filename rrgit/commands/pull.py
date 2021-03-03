@@ -52,9 +52,23 @@ class Pull(Command):
                 fo = pull_files[path]
                 info(f'{symbols.pull} {path}')
                 fo.pullFile(self.dwa, self.cfg.dir)
+                
+            lo_filtered = {}
             for path in lo:
-                info(f'{symbols.delete} {path}')
-                report['local_files'][path].delete(self.dwa, self.cfg.dir)
+                lo_filtered[path] = report['local_files'][path]
+                
+            lo_filtered = filter_by_patterns(lo_filtered, self.args.file_patterns)
+            
+            if len(lo_filtered.keys()) > 0:
+                if not self.args.yes:
+                    error('The following files are local only and will be deleted.')
+                    for path, fo in lo_filtered.items():
+                        info(f'- {path}')
+                    if not yes_or_no('Delete local files?'):
+                        return
+                for path, fo in lo_filtered.items():
+                    info(f'{symbols.delete} {path}')
+                    fo.delete(self.dwa, self.cfg.dir)
         elif len(ro) > 0 or len(lo) > 0 or len(rn) > 0 or len(ln) > 0 or len(ds) > 0:
             if not self.args.yes and (len(ln) > 0 or len(ds) > 0 or len(lo) > 0) :
                 if len(ln) > 0:

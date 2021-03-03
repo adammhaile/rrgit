@@ -53,9 +53,22 @@ class Push(Command):
                 info(f'{symbols.push} {path}')
                 fo.pushFile(self.dwa, self.cfg.dir)
                 
+            ro_filtered = {}
             for path in ro:
-                info(f'{symbols.delete} {path}')
-                report['remote_files'][path].delete(self.dwa)
+                ro_filtered[path] = report['remote_files'][path]
+                
+            ro_filtered = filter_by_patterns(ro_filtered, self.args.file_patterns)
+                    
+            if len(ro_filtered.keys()) > 0:
+                if not self.args.yes:
+                    error('The following files are remote only and will be deleted.')
+                    for path, fo in ro_filtered.items():
+                        info(f'- {path}')
+                    if not yes_or_no('Delete remote files?'):
+                        return
+                for path, fo in ro_filtered.items():
+                    info(f'{symbols.delete} {path}')
+                    fo.delete(self.dwa)
         elif len(lo) > 0 or len(ro) or len(rn) > 0 or len(ln) > 0 or len(ds) > 0:
             if not self.args.yes and (len(rn) > 0 or len(ro) > 0 or len(ds) > 0) :
                 if len(rn) > 0:
