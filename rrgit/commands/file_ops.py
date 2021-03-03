@@ -8,6 +8,8 @@ import pathspec
 import os
 from datetime import datetime
 
+import difflib
+
 class FileType(enum.Enum):
     Local = 1
     Remote = 2
@@ -209,3 +211,21 @@ def filter_by_patterns(file_map, patterns):
             result[path] = fo
     return result
     
+def gen_file_diff(path, fremote, flocal):
+    with open(fremote, 'r') as f:
+        remote_lines = f.readlines()
+    with open(flocal, 'r') as f:
+        local_lines = f.readlines()
+        
+    delta = difflib.unified_diff(remote_lines, local_lines, f'<remote>/{path}', f'<local>/{path}')
+    result = ''
+    for l in delta:
+        if l.startswith('+'):
+            result += color_string(l, 'green')
+        elif l.startswith('-'):
+            result += color_string(l, 'red')
+        elif l.startswith('^'):
+            result += color_string(l, 'blue')
+        else:
+            result += l
+    return result
