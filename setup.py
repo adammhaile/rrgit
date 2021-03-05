@@ -8,21 +8,9 @@ with open('./requirements.txt') as f:
 
 def _get_version():
     from os.path import abspath, dirname, join
-    filename = join(dirname(abspath(__file__)), 'rrgit', 'VERSION')
-    return open(filename).read().strip()
-
-ENTRY_POINTS = None
-SCRIPTS = None
-
-if True: #os.name == 'nt':
-    ENTRY_POINTS = {
-            'console_scripts': [
-                'rrgit = rrgit:main',
-                'rrg = rrgit:main',
-            ]
-        }
-# else:
-#     SCRIPTS = ['scripts/rrgit']
+    filename = join(dirname(abspath(__file__)), 'rrgit', 'version.py')
+    line = open(filename).read()
+    return line.replace('VERSION=', '').strip().strip("'")
 
 setup(
     name="rrgit",
@@ -35,8 +23,12 @@ setup(
     license="GNU General Public License v3 (GPLv3)",
     packages=find_packages(exclude=[]),
     include_package_data=True,
-    entry_points=ENTRY_POINTS,
-    scripts=SCRIPTS,
+    entry_points={
+            'console_scripts': [
+                'rrgit = rrgit:main',
+                'rrg = rrgit:main',
+            ]
+        },
     install_requires=INSTALL_REQUIRES,
     dependency_links=[],
     classifiers=[
@@ -45,7 +37,6 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Environment :: Console",
-        "Operating System :: POSIX",
         "License :: OSI Approved :: License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Natural Language :: English",
     ]

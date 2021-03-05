@@ -7,6 +7,7 @@ import logging
 from . commands import CommandMap
 from . util import rrgit_error
 from . log import error, warn, info
+from . version import VERSION
 import pathspec
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
@@ -97,6 +98,8 @@ def parse_args():
     )
     sp = p.add_subparsers(help='commands', dest='command')
     
+    vp = sp.add_parser('version', help='Show rrgit version info')
+    
     for cmd in CommandMap.values():
         cmd.add_parser(sp)
     
@@ -105,7 +108,10 @@ def parse_args():
 def main():
     try:
         parser, args = parse_args()
-        if args.command == 'clone':
+        if args.command == 'version':
+            info(f'rrgit version {VERSION}')
+            exit()
+        elif args.command == 'clone':
             args.directory = os.path.abspath(args.directory)
             cwd = args.directory
             no_warn = True
