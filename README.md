@@ -2,6 +2,8 @@
 
 `rrgit` is a command line utility to aid in the process of editing RepRapFirmware / Duet controller configuration files over a network connection. It is designed to be as git-like as possible in order to provide a familiar interface. Of course, however, the RepRapFirmware interface is far less extensive compared to git, so `rrgit` handles just the basics. It will allow you to clone, pull, push, and diff between the controller and local copies of the files.
 
+**Disclaimer:** This is brand new software so there might be bugs. **Back up your configuration files the old-fashioned way first!** This is your only warning :) 
+
 ## Installation
 
 The simplest way to install is:
