@@ -91,6 +91,8 @@ It will always show the diff output in a format with remote as file A and local 
 
 `rrgit watch`
 
+**NOTE:** Currently the `watch` command is disabled under Windows. I cannot get the `watchdog` python package to work reliably for Windows at this time.
+
 Watch the local `rrgit` directory tree and automatically push all changes to the remote machine. This is useful if you will be making many changes and runnings tests after each. Instead of running the `push` command each time the files will be pushed as soon as they are saved locally.
 
 ## `.rrgitignore` file

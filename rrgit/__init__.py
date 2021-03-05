@@ -100,6 +100,10 @@ def parse_args():
     
     vp = sp.add_parser('version', help='Show rrgit version info')
     
+    # remove watch from Windows for now since it doesn't work
+    if os.name == 'nt':
+        del CommandMap['watch']
+        
     for cmd in CommandMap.values():
         cmd.add_parser(sp)
     

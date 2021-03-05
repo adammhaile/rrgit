@@ -25,15 +25,6 @@ class Diff(Command):
     def run(self):
         report = build_status_report(self.dwa, self.cfg, self.directories)
         
-        # pull_files = {}
-        # if self.args.force or len(self.args.file_patterns) > 0:
-        #     pull_files = report['remote_files']
-        #     if len(self.args.file_patterns) > 0:
-        #         pull_files = filter_by_patterns(pull_files, self.args.file_patterns)
-        
-        # lo = report['local_only']
-        # ro = report['remote_only']
-        
         diff_files = {}
         for t in ['remote_newer', 'local_newer', 'diff_size']:
             for path, fo in report[t].items():
@@ -41,7 +32,6 @@ class Diff(Command):
                     diff_files[path] = (report['remote_files'][path], report['local_files'][path])
         
         diff_files = filter_by_patterns(diff_files, self.args.file_patterns)
-        
         if diff_files:
             with tempfile.TemporaryDirectory() as tmpdir:
                 status('Pulling remote files to be compared...')

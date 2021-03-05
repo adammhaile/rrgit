@@ -204,6 +204,8 @@ def gen_pathspec(patterns):
     return pathspec.PathSpec.from_lines('gitwildmatch', patterns)
     
 def filter_by_patterns(file_map, patterns):
+    if not patterns:
+        return file_map
     spec = gen_pathspec(patterns)
     result = {}
     for path, fo in file_map.items():
