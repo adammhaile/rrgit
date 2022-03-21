@@ -74,11 +74,13 @@ class Config():
         try:
             with open(self.ignore_path, 'r') as f:
                 self.ignore = []
-                for l in f.readlines:
+                for l in f:
                     l = l.rstrip()
                     if l:
                         self.ignore.append(l)
         except Exception as e:
+            if not self.no_warn:
+                error(str(e))
             self.ignore = DEFAULT_IGNORE
         
         self.valid = True
